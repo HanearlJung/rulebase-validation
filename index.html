@@ -1,0 +1,40 @@
+<!doctype html><html lang='ko'><head><meta charset='utf-8'><title>rulebase 규칙 설명</title>
+<style>
+  body { font-family: -apple-system, 'Segoe UI', 'Noto Sans KR', sans-serif;
+         color: #222; max-width: 1400px; margin: 24px auto; padding: 0 16px; }
+  h1 { border-bottom: 3px solid #333; padding-bottom: 8px; }
+  h2 { color: #333; margin-top: 28px; }
+  nav { margin-bottom: 16px; }
+  nav a { margin-right: 12px; color: #0366d6; text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+  th, td { border: 1px solid #ccc; padding: 6px 8px; font-size: 13px;
+           vertical-align: top; }
+  th { background: #f0f0f0; position: sticky; top: 0; }
+  .rule-id { font-weight: 700; color: #0366d6; width: 80px; }
+  .rule-name { width: 160px; font-weight: 600; }
+  .rule-desc { color: #444; }
+  .matrix th.col-name { text-align: left; min-width: 180px; background: #fafafa; }
+  .matrix td { text-align: center; font-size: 12px; }
+  .matrix td.col-name { text-align: left; font-weight: 600; background: #fafafa; }
+  .run { background: #d4edda; color: #155724; }
+  .skip-override { background: #f8d7da; color: #721c24; }
+  .skip-auto { background: #fff3cd; color: #856404; }
+  .skip-type { background: #e2e3e5; color: #495057; }
+  .na { background: #f5f5f5; color: #999; }
+  .legend { margin: 10px 0; font-size: 12px; }
+  .legend span { display: inline-block; padding: 2px 8px; margin-right: 8px;
+                 border: 1px solid #ccc; }
+</style>
+</head><body>
+<h1>KODATA rulebase — 검증 규칙 설명</h1>
+<nav><a href="index.html">규칙 설명</a> <a href="vw_extract_audit_overview.html">audit_overview</a> <a href="vw_extract_audit_shareholders.html">audit_shareholders</a> <a href="vw_extract_audit_investee_ownership.html">audit_investee_ownership</a> <a href="vw_extract_audit_investee_financials.html">audit_investee_financials</a> <a href="vw_extract_audit_investee_valuation.html">audit_investee_valuation</a> <a href="vw_extract_audit_related_party_list.html">audit_related_party_list</a> <a href="vw_extract_audit_related_party_transactions.html">audit_related_party_transactions</a> <a href="vw_extract_audit_related_party_balances.html">audit_related_party_balances</a> <a href="vw_extract_audit_value_added_accounts.html">audit_value_added_accounts</a> <a href="vw_extract_audit_guarantees.html">audit_guarantees</a> <a href="vw_extract_audit_collateral.html">audit_collateral</a> <a href="vw_extract_audit_borrowings.html">audit_borrowings</a> <a href="vw_extract_audit_insurance.html">audit_insurance</a> <a href="vw_extract_audit_rnd_expenses.html">audit_rnd_expenses</a> <a href="vw_extract_audit_cont_guarantee_summary.html">audit_cont_guarantee_summary</a> <a href="vw_extract_audit_cont_guarantee_details.html">audit_cont_guarantee_details</a> <a href="vw_extract_audit_cont_pledged_notes.html">audit_cont_pledged_notes</a> <a href="vw_extract_audit_cont_litigation.html">audit_cont_litigation</a> <a href="vw_extract_audit_cont_collateral.html">audit_cont_collateral</a></nav>
+<p>각 검증 규칙이 무엇을 탐지하는지 요약. 자세한 스펙은
+<code>rulebase_filtering.md</code> 참고.</p>
+<table>
+  <thead><tr><th>규칙 ID</th><th>이름</th><th>설명</th></tr></thead>
+  <tbody>
+    <tr><td class="rule-id">C1</td><td class="rule-name">VARCHAR 바이트 초과</td><td class="rule-desc">컬럼에 정의된 최대 바이트를 넘어서는 값을 찾는다. KODATA 규약: 한글 1자 = 2 byte, 영문/숫자/공백/특수문자 = 1 byte (CP949 기준). 적재 대상 스키마의 max_bytes 를 기준으로 비교한다.</td></tr><tr><td class="rule-id">C2</td><td class="rule-name">값 범위 초과</td><td class="rule-desc">숫자 컬럼의 범위 위반을 찾는다. 지분율(ratio): 0 ~ 100 / 이자율(interest_rate): 0 ~ 9,999.999 / 금액(amount): 정수부 17자리 이하. 숫자로 파싱 실패하면 warning.</td></tr><tr><td class="rule-id">C3</td><td class="rule-name">허용 값(enum) 위반</td><td class="rule-desc">컬럼에 사전 정의된 허용 값 목록이 있을 때, 그 바깥의 값을 전부 오류로 잡는다. 예: data_period 는 [&quot;당기&quot;,&quot;전기&quot;] 만 허용. 빈 값/NULL 은 C4 가 담당하므로 여기선 넘어간다.</td></tr><tr><td class="rule-id">C4</td><td class="rule-name">필수키 결측</td><td class="rule-desc">반드시 값이 있어야 하는 식별자 컬럼이 NULL / 빈 문자열 / 공백만 / &quot;NULL&quot; 문자열 인 경우. 스키마의 key=Y 컬럼과 기본 필수키(corp_no, business_registration_no, row_group_id 등)에 적용.</td></tr><tr><td class="rule-id">C5-1</td><td class="rule-name">인코딩 깨짐</td><td class="rule-desc">정상 한글이라면 조합형 음절(가~힣) 범위여야 하는데, 한글 자모(ㄱ~ㅎ 초성) 나 박스 드로잉 문자(┐, ━) 가 섞여있는 경우. HTML 변환/OCR 오류 징후.</td></tr><tr><td class="rule-id">C5-2</td><td class="rule-name">자모 전용 셀</td><td class="rule-desc">값 전체가 한글 자모(ㄱ~ㅎ, ㅏ~ㅣ)로만 구성된 경우. 예: &quot;ㄱㅇ&quot;, &quot;ㅇㅇㅇ&quot;. 정상 입력이 아니라 타자 오류/임시 값.</td></tr><tr><td class="rule-id">C5-3</td><td class="rule-name">impossible 음절</td><td class="rule-desc">한국어 위키 2,171,086 기사에서 빈도가 임계치(기본 1,000회) 미만인 음절이 한 개라도 등장하면 오류. 한글 11,172 음절 중 상위 약 1,500개(=common_syllables) 만 허용하는 셈. KODATA 도메인(감사/공시 문서)은 정형화된 기업 문서라 구어체/의성어 FP가 없어 공격적 임계치 사용. 모든 텍스트 컬럼에 적용 — 회사명/자유서술 구분 없음.</td></tr><tr><td class="rule-id">C5-5</td><td class="rule-name">특수문자 전용</td><td class="rule-desc">값 전체가 특수문자/공백/괄호만으로 구성된 경우(예: &quot;---&quot;, &quot;(  )&quot;), 또는 non-breaking hyphen(&quot;‑&quot;) / bullet(&quot;•&quot;) 가 3회 이상 연속된 경우.</td></tr><tr><td class="rule-id">C5-6</td><td class="rule-name">HTML 엔티티 미변환</td><td class="rule-desc">`&amp;nbsp;`, `&amp;amp;`, `&amp;lt;`, `&amp;gt;`, `&amp;quot;`, `&amp;#숫자;` 등 HTML 엔티티가 디코딩되지 않고 원본 그대로 남아있는 경우. 크롤링/파싱 단계 버그.</td></tr><tr><td class="rule-id">C5-7</td><td class="rule-name">제어문자</td><td class="rule-desc">값에 ASCII 제어문자(\x00~\x1f, \x7f~\x9f 등)가 포함된 경우. 일반 텍스트에는 들어갈 수 없는 문자이므로 명백한 버그.</td></tr><tr><td class="rule-id">C6</td><td class="rule-name">파싱 오류</td><td class="rule-desc">① maturity_date 날짜 포맷 불일치 (YYYY-MM-DD, YYYYMMDD 등 허용) ② 주석 마크만 있는 셀 (&quot;(주)&quot;, &quot;(주1)&quot;, &quot;*주2&quot; 등 내용 없음) ③ raw_* 와 calculated_* 금액 컬럼이 같은 행에서 0.1% 이상 차이.</td></tr>
+  </tbody>
+</table>
+</body></html>
